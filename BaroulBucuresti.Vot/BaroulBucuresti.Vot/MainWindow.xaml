@@ -1,0 +1,22 @@
+﻿<Window x:Class="BaroulBucuresti.Vot.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BaroulBucuresti.Vot"
+        mc:Ignorable="d" WindowState="Maximized" WindowStartupLocation="CenterScreen"
+        Title="MainWindow" Height="350" Width="525">
+
+    <DockPanel>
+        <Ribbon DockPanel.Dock="Top" Margin="0,-22,0,0">
+            <Ribbon.ApplicationMenu>
+                <RibbonApplicationMenu KeyTip="F">
+                    <RibbonApplicationMenuItem Header="Opțiuni vot" ImageSource="images/options-128.png" Name="mnuOptiuniVot" Click="mnuOptiuniVot_Click" />
+                    <RibbonApplicationMenuItem Header="Setări program" ImageSource="images/cog-48.png" Name="mnuSetariAplicatie" Click="mnuSetariAplicatie_Click" />
+                    <RibbonApplicationMenuItem Header="Ieșire" ImageSource="images/exit-128.png" Name="mnuExit" Click="mnuExit_Click"/>
+                </RibbonApplicationMenu>
+            </Ribbon.ApplicationMenu>
+        </Ribbon>
+    </DockPanel>
+    
+</Window>
