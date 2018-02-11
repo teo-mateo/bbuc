@@ -17,6 +17,15 @@
                 </RibbonApplicationMenu>
             </Ribbon.ApplicationMenu>
         </Ribbon>
+
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom">
+            <GroupBox Header="Scan" Width="200">
+                <ListBox>
+                    
+                </ListBox>
+            </GroupBox>
+        </StackPanel>
+        
     </DockPanel>
     
 </Window>

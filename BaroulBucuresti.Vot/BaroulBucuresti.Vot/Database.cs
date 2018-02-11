@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,8 @@ namespace BaroulBucuresti.Vot
 
         public static void ExecuteNonQuery(string command, SQLiteConnection cn=null)
         {
+            Debug.WriteLine("(ExecuteNonQuery) " + command);
+
             bool dispose = false;
 
             if (cn == null) {
@@ -42,6 +45,8 @@ namespace BaroulBucuresti.Vot
 
         public static IEnumerable<dynamic> ExecuteQuery(string command, SQLiteConnection cn = null)
         {
+            Debug.WriteLine("(ExecuteQuery) " + command);
+
             bool dispose = false;
             if (cn == null) {
                 cn = Connect();
@@ -83,6 +88,8 @@ namespace BaroulBucuresti.Vot
 
         public static object ExecuteScalar(string command, SQLiteConnection cn = null)
         {
+            Debug.WriteLine("(ExecuteScalar) " + command);
+
             bool dispose = false;
             if (cn == null) {
                 cn = Connect();

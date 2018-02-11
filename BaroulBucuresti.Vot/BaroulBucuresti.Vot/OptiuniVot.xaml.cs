@@ -55,6 +55,8 @@ namespace BaroulBucuresti.Vot
                     _optiuniVotList.Add(new OptiuneVot() { NrCrt = i + 1, Name = split[i] });
                 }
                 OnPropertyChanged("OptiuniVotList");
+                OnPropertyChanged("Group1Count");
+                OnPropertyChanged("Group2Count");
             }
         }
 
@@ -62,6 +64,17 @@ namespace BaroulBucuresti.Vot
         public List<OptiuneVot> OptiuniVotList {
             get {
                 return _optiuniVotList;
+            }
+        }
+
+        public int Group1Count {
+            get {
+                return _optiuniVotList.Count / 2 + _optiuniVotList.Count % 2;
+            }
+        }
+        public int Group2Count {
+            get {
+                return _optiuniVotList.Count / 2;
             }
         }
 
@@ -88,6 +101,10 @@ namespace BaroulBucuresti.Vot
             for (int i = 0; i < OptiuniVotList.Count; i++) {
                 Database.ExecuteNonQuery(String.Format("insert into VoteOptions (nrcrt, name) values ({0}, '{1}')", OptiuniVotList[i].NrCrt, OptiuniVotList[i].Name));
             }
+
+            //MUST:
+            App.OptiuniVot = OptiuniVotList;
+
             Close();
         }
 

@@ -93,6 +93,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="models\Vot.cs" />
     <Compile Include="OptiuniVot.xaml.cs">
       <DependentUpon>OptiuniVot.xaml</DependentUpon>
     </Compile>

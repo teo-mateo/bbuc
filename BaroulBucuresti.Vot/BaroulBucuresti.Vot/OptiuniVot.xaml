@@ -9,6 +9,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
 
@@ -31,7 +32,32 @@
                 </ListBox.ItemTemplate>
             </ListBox>
         </Grid>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="1">
+
+        <Grid Grid.Row="1" Margin="8,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="24" />
+            </Grid.RowDefinitions>
+
+            <TextBlock xml:space="preserve" Grid.Row="0" Grid.Column="0">
+                <TextBlock.Text>Optiuni grup 1:  </TextBlock.Text>
+            </TextBlock>
+
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Group1Count}" />
+
+            <TextBlock xml:space="preserve" Grid.Row="1" Grid.Column="0">
+                <TextBlock.Text>Optiuni grup 2:  </TextBlock.Text>
+            </TextBlock>
+
+            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Group2Count}" />
+
+        </Grid>
+        
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2">
             <Button Margin="3" Width="80" Name="btnOK" Click="btnOK_Click">OK</Button>
             <Button Margin="3" Width="80" Name="btnCancel" Click="btnCancel_Click">Anulează</Button>
         </StackPanel>
