@@ -20,6 +20,8 @@ namespace BaroulBucuresti.Vot
     /// </summary>
     public partial class OptiuniVot : Window, INotifyPropertyChanged
     {
+        public bool ChangesWereMade { get; set; }
+
         public OptiuniVot()
         {
             InitializeComponent();
@@ -90,7 +92,11 @@ namespace BaroulBucuresti.Vot
         {
             var voteCount = (Int64)Database.ExecuteScalar("select count(*) from Votes");
             if (voteCount > 0) {
-                if (MessageBox.Show("sigur stergem si voturile?", "intrebare", MessageBoxButton.OKCancel) == MessageBoxResult.Cancel) {
+                if (MessageBox.Show(
+                    "Există voturi inregistrate pentru această sesiune de lucru.\nModificarea opțiunilor de vot va duce la ștergerea voturilor.", 
+                    "Confirmare", 
+                    MessageBoxButton.OKCancel, 
+                    MessageBoxImage.Exclamation) == MessageBoxResult.Cancel) {
                     return;
                 }
 
@@ -104,6 +110,7 @@ namespace BaroulBucuresti.Vot
 
             //MUST:
             App.OptiuniVot = OptiuniVotList;
+            ChangesWereMade = true;
 
             Close();
         }

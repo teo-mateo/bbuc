@@ -18,10 +18,29 @@ namespace BaroulBucuresti.Vot
             return c;
         }
 
+        public static string GetSetting(string key)
+        {
+            var v = ExecuteScalar(String.Format("select value from Settings where key='{0}' limit 1", key));
+            if (v == null) {
+                return "";
+            } else {
+                return (string)v;
+            }
+        }
+
+        public static void SetSetting(string key, string value)
+        {
+            var c = (long)ExecuteScalar(String.Format("select count(*) from Settings where key = '{0}'", key));
+            if (c == 0) {
+                ExecuteNonQuery(String.Format("insert into Settings (key, value) values ('{0}', '{1}')", key, value));
+            } else {
+                ExecuteNonQuery(String.Format("update Settings set value='{0}' where key='{1}'", value, key));
+            }
+        }
+
         public static void ExecuteNonQuery(string command, SQLiteConnection cn=null)
         {
             Debug.WriteLine("(ExecuteNonQuery) " + command);
-
             bool dispose = false;
 
             if (cn == null) {

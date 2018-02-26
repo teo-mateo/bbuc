@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BaroulBucuresti.Vot"
         mc:Ignorable="d"
-        Title="OptiuniVot" Height="500" Width="800">
+        Title="Opțiuni Vot" Height="500" Width="800" WindowStyle="ToolWindow">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -18,10 +18,13 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <TextBox AcceptsReturn="True" Grid.Column="0" Margin="3" Text="{Binding OptiuniVotText, UpdateSourceTrigger=PropertyChanged}">
-                
-            </TextBox>
-            <ListBox Grid.Column="1" Margin="3" ItemsSource="{Binding OptiuniVotList}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBlock Margin="3">Modifică opțiunile de vot:</TextBlock>
+            <TextBox AcceptsReturn="True" Grid.Column="0" Margin="3" Text="{Binding OptiuniVotText, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" />
+            <ListBox Grid.Column="1" Margin="3" ItemsSource="{Binding OptiuniVotList}" Grid.Row="1">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
@@ -44,13 +47,13 @@
             </Grid.RowDefinitions>
 
             <TextBlock xml:space="preserve" Grid.Row="0" Grid.Column="0">
-                <TextBlock.Text>Optiuni grup 1:  </TextBlock.Text>
+                <TextBlock.Text>Opțiuni grup 1:  </TextBlock.Text>
             </TextBlock>
 
             <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Group1Count}" />
 
             <TextBlock xml:space="preserve" Grid.Row="1" Grid.Column="0">
-                <TextBlock.Text>Optiuni grup 2:  </TextBlock.Text>
+                <TextBlock.Text>Opțiuni grup 2:  </TextBlock.Text>
             </TextBlock>
 
             <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Group2Count}" />
@@ -59,7 +62,7 @@
         
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2">
             <Button Margin="3" Width="80" Name="btnOK" Click="btnOK_Click">OK</Button>
-            <Button Margin="3" Width="80" Name="btnCancel" Click="btnCancel_Click">Anulează</Button>
+            <Button Margin="3" Width="80" Name="btnCancel" Click="btnCancel_Click" IsCancel="True">Anulează</Button>
         </StackPanel>
         
     </Grid>

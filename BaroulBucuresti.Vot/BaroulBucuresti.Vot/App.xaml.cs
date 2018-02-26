@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Accord.Imaging.Filters;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SQLite;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,6 +24,18 @@ namespace BaroulBucuresti.Vot
         public static string SQLITE_CN {
             get {
                 return String.Format("Data source={0};Version=3", SQLITE_FILE);
+            }
+        }
+
+        public static string KEY_VOTE_SOURCE {
+            get {
+                return "VoteSource";
+            }
+        }
+
+        public static string KEY_WORKSPACE {
+            get {
+                return "Workspace";
             }
         }
     }
@@ -74,8 +88,7 @@ namespace BaroulBucuresti.Vot
                 Database.ExecuteNonQuery("create table Settings (key text primary key, value text)");
             }
 
-            models.Vot v = new models.Vot("fisier.png");
-            v.Update();
+
         }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

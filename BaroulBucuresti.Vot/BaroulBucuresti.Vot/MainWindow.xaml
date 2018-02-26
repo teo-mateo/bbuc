@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BaroulBucuresti.Vot"
         mc:Ignorable="d" WindowState="Maximized" WindowStartupLocation="CenterScreen"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="350" Width="800">
 
     <DockPanel>
         <Ribbon DockPanel.Dock="Top" Margin="0,-22,0,0">
@@ -16,16 +16,65 @@
                     <RibbonApplicationMenuItem Header="Ieșire" ImageSource="images/exit-128.png" Name="mnuExit" Click="mnuExit_Click"/>
                 </RibbonApplicationMenu>
             </Ribbon.ApplicationMenu>
+            <RibbonTab x:Name="rbnTab1" Header="">
+                <RibbonGroup x:Name="rbnGr1" Header="General">
+                    <RibbonButton x:Name="btnSursaVoturi" Label="Alege sursă voturi" LargeImageSource="images/folder-32.png" Click="btnSursaVoturi_Click"/>
+                    <RibbonButton x:Name="btnDetect" Label="Vot curent" LargeImageSource="images/folder-32.png" Click="btnDetect_Click"></RibbonButton>
+                    <RibbonButton x:Name="btnManual" Label="Manual" LargeImageSource="images/folder-32.png" Click="btnManual_Click"></RibbonButton>
+                    <RibbonButton x:Name="btnAutomat" Label="Automat" LargeImageSource="images/folder-32.png" Click="btnAutomat_Click"></RibbonButton>
+                    <RibbonButton x:Name="btnSharpen" Label="Sharpen" Click="btnSharpen_Click"></RibbonButton>
+                    <RibbonButton x:Name="btnMedian" Label="Median" Click="btnMedian_Click"></RibbonButton>
+                    <RibbonButton x:Name="btnSobel" Label="Sobel edge" Click="btnSobel_Click"></RibbonButton>
+                    <RibbonButton x:Name="btnCanny" Label="Canny edge" Click="btnCanny_Click"></RibbonButton>
+                    <RibbonButton x:Name="btnDifference" Label="Difference edge" Click="btnDifference_Click"></RibbonButton>
+                    <RibbonButton x:Name="btnHoughLines" Label="Hough lines" Click="btnHoughLines_Click"></RibbonButton>
+                    <RibbonButton x:Name="btnBlobCounter" Label="Blob counter" Click="btnBlobCounter_Click"></RibbonButton>
+                    <RibbonButton x:Name="btnSave" Label="Save" Click="btnSave_Click"></RibbonButton>
+                </RibbonGroup>
+            </RibbonTab>
         </Ribbon>
 
-        <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom">
-            <GroupBox Header="Scan" Width="200">
-                <ListBox>
+        <Grid DockPanel.Dock="Bottom">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5 5 0 0">
+                <TextBlock VerticalAlignment="Center">Sursa fisiere:</TextBlock>
+                <TextBox Width="600" Margin="2" Text="{Binding VoteSource, Mode=OneWay}" IsReadOnly="True" IsEnabled="False"></TextBox>
+            </StackPanel>
+            <StackPanel Orientation="Vertical" Grid.Row="1">
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="5 0 0 0">
+                <GroupBox Header="Scan" Width="350">
+
+                    <DataGrid ItemsSource="{Binding Votes}" CanUserAddRows="False" IsReadOnly="True" AutoGenerateColumns="False" SelectedItem="{Binding SelectedVot}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Fisier" Binding="{Binding VotVM.Filename}" Width="*"/>
+                            <DataGridCheckBoxColumn Header="Procesat" Binding="{Binding VotVM.Processed}" />
+                            <DataGridCheckBoxColumn Header="Anulat" Binding="{Binding VotVM.Nullified}" />
+                            <DataGridCheckBoxColumn Header="Manual" Binding="{Binding VotVM.Manual}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
                     
-                </ListBox>
-            </GroupBox>
-        </StackPanel>
-        
+                    <!--<ListBox ItemsSource="{Binding Votes}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding ShortFilename}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>-->
+                </GroupBox>
+                <local:ZoomBorder x:Name="border" ClipToBounds="True" Background="Gray">
+                    <Image Name="imgPreview" Width="800"/>
+                </local:ZoomBorder>
+                
+            </StackPanel>
+
+        </Grid>
     </DockPanel>
     
 </Window>
