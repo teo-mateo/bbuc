@@ -165,9 +165,20 @@
     </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="images\folder-32.png" />
+    <Resource Include="images\folder-32.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="images\hand-200.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="images\count2-48.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="images\play-256.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Content Include="lib\Accord.dll" />
     <Content Include="lib\Accord.Imaging.dll" />
     <Resource Include="lib\Accord.Imaging.xml" />

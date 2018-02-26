@@ -154,13 +154,13 @@ namespace SampleApp
             this.oilFiltersItem = new System.Windows.Forms.MenuItem();
             this.textureFiltersItem = new System.Windows.Forms.MenuItem();
             this.menuItem9 = new System.Windows.Forms.MenuItem();
+            this.menuItem10 = new System.Windows.Forms.MenuItem();
             this.sizeItem = new System.Windows.Forms.MenuItem();
             this.normalSizeItem = new System.Windows.Forms.MenuItem();
             this.stretchedSizeItem = new System.Windows.Forms.MenuItem();
             this.centeredSizeItem = new System.Windows.Forms.MenuItem();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.pictureBox = new System.Windows.Forms.PictureBox();
-            this.menuItem10 = new System.Windows.Forms.MenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             this.SuspendLayout();
             // 
@@ -437,6 +437,12 @@ namespace SampleApp
             this.menuItem9.Text = "FastGuidedFilter";
             this.menuItem9.Click += new System.EventHandler(this.fastGuidedFilterFiltersItem_Click);
             // 
+            // menuItem10
+            // 
+            this.menuItem10.Index = 34;
+            this.menuItem10.Text = "Canny";
+            this.menuItem10.Click += new System.EventHandler(this.cannyEdgesFiltersItem_Click);
+            // 
             // sizeItem
             // 
             this.sizeItem.Index = 2;
@@ -479,17 +485,11 @@ namespace SampleApp
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pictureBox.Location = new System.Drawing.Point(7, 5);
-            this.pictureBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.pictureBox.Margin = new System.Windows.Forms.Padding(2);
             this.pictureBox.Name = "pictureBox";
             this.pictureBox.Size = new System.Drawing.Size(524, 353);
             this.pictureBox.TabIndex = 0;
             this.pictureBox.TabStop = false;
-            // 
-            // menuItem10
-            // 
-            this.menuItem10.Index = 34;
-            this.menuItem10.Text = "Canny";
-            this.menuItem10.Click += new System.EventHandler(this.cannyEdgesFiltersItem_Click);
             // 
             // MainForm
             // 
@@ -498,7 +498,7 @@ namespace SampleApp
             this.ClientSize = new System.Drawing.Size(536, 362);
             this.Controls.Add(this.pictureBox);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Menu = this.mainMenu;
             this.MinimumSize = new System.Drawing.Size(345, 241);
             this.Name = "MainForm";

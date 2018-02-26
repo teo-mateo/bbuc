@@ -1,4 +1,5 @@
-﻿using Ghostscript.NET.Rasterizer;
+﻿using BaroulBucuresti.Vot.models;
+using Ghostscript.NET.Rasterizer;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -30,13 +31,24 @@ namespace BaroulBucuresti.Vot
         {
             InitializeComponent();
 
-            _votes = new List<models.Vot>();
+            _votes = new List<models.BuletinVot>();
             DataContext = this;
             LoadVotes();
         }
 
-        private models.Vot _selectedVot;
-        public models.Vot SelectedVot {
+        private int _maxVotes = -1;
+        public int MaxVotes {
+            get {
+                if (_maxVotes == -1) {
+                    _maxVotes = int.Parse(Database.GetSetting(Constants.KEY_MAXVOTES));
+                }
+
+                return _maxVotes;
+            }
+        }
+
+        private models.BuletinVot _selectedVot;
+        public models.BuletinVot SelectedVot {
             get {
                 return _selectedVot;
             }
@@ -70,8 +82,8 @@ namespace BaroulBucuresti.Vot
 
         public string VoteSource { get; set; }
 
-        private List<models.Vot> _votes;
-        public List<models.Vot> Votes {
+        private List<models.BuletinVot> _votes;
+        public List<models.BuletinVot> Votes {
             get { return _votes; }
         }
 
@@ -91,16 +103,6 @@ namespace BaroulBucuresti.Vot
             }
         }
 
-        private void mnuSetariAplicatie_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void btnRibbon1_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
         private void btnSursaVoturi_Click(object sender, RoutedEventArgs e)
         {
             var source = Database.GetSetting(Constants.KEY_VOTE_SOURCE);
@@ -115,81 +117,67 @@ namespace BaroulBucuresti.Vot
                     fbd.SelectedPath = directory;
                 }
 
-                if (fbd.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+                var voteCount = (Int64)Database.ExecuteScalar("select count(*) from Votes");
+                if (voteCount > 0) {
                     if (MessageBox.Show(
-                        "Există voturi inregistrate pentru această sesiune de lucru.\nModificarea sursei fisierelor va duce la ștergerea voturilor.",
+                        "Există voturi inregistrate pentru această sesiune de lucru.\nModificarea opțiunilor de vot va duce la ștergerea voturilor.",
                         "Confirmare",
                         MessageBoxButton.OKCancel,
                         MessageBoxImage.Exclamation) == MessageBoxResult.Cancel) {
                         return;
                     }
 
+                }
+
+                if (fbd.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+
+                    Database.ExecuteNonQuery("delete from Votes");
+                    Votes.Clear();
+                    OnPropertyChanged("Votes");
+                    SelectedVot = null;
+                    OnPropertyChanged("SelectedVot");
+                    Clasament.Clear();
+                    OnPropertyChanged("Clasament");
 
                     Database.SetSetting(Constants.KEY_VOTE_SOURCE, fbd.SelectedPath);
 
 
-                    //var workspace = System.IO.Path.Combine(fbd.SelectedPath, "Workspace");
-                    //if (!Directory.Exists(workspace)) {
-                    //    Directory.CreateDirectory(workspace);
-                    //}
+                    LoadVotes(fbd.SelectedPath);
 
-                    //convert
-                    //var files = Directory.EnumerateFiles(fbd.SelectedPath);
-                    //foreach(var f in files) {
-                    //    if (f.EndsWith("pdf", StringComparison.InvariantCultureIgnoreCase)) {
-
-                    //        var fn = new FileInfo(f).Name.ToLower().Replace(".pdf", ".png");
-
-                    //        int desired_x_dpi = 200;
-                    //        int desired_y_dpi = 200;
-
-                    //        using (var rasterizer = new GhostscriptRasterizer()) {
-                    //            rasterizer.Open(f);
-
-                    //            if (rasterizer.PageCount > 1) {
-                    //                continue;
-                    //            }
-
-                    //            for (var pageNumber = 1; pageNumber <= rasterizer.PageCount; pageNumber++) {
-                    //                var pageFilePath = System.IO.Path.Combine(workspace, fn);
-
-                    //                if (File.Exists(pageFilePath)) {
-                    //                    File.Delete(pageFilePath);
-                    //                }
-
-
-                    //                var img = rasterizer.GetPage(desired_x_dpi, desired_y_dpi, pageNumber);
-                    //                img.Save(pageFilePath, System.Drawing.Imaging.ImageFormat.Png);
-                    //                img.Dispose();
-
-                    //                Console.WriteLine(pageFilePath);
-                    //            }
-                    //        }
-                    //    }
-                    //}
-
-                    //Database.SetSetting(Constants.KEY_VOTE_SOURCE, workspace);
-
-                    LoadVotes();
+                    dgVotes.Items.Refresh();
+                    imgPreview.Source = null;
                 }
             }
         }
 
-        private void LoadVotes()
+        private void LoadVotes(string source="")
         {
-            string sourcePath = Database.GetSetting(Constants.KEY_VOTE_SOURCE); 
-            if(string.IsNullOrEmpty(sourcePath) || !Directory.Exists(sourcePath)) {
-                return;
+            if (string.IsNullOrEmpty(source)) {
+
+                _votes = new List<models.BuletinVot>();
+
+                var result = Database.ExecuteQuery("select * from Votes");
+                foreach(var record in result) {
+                    var v = new BuletinVot(record);
+                    _votes.Add(v);
+                }
+            } else {
+                string sourcePath = Database.GetSetting(Constants.KEY_VOTE_SOURCE);
+                if (string.IsNullOrEmpty(sourcePath) || !Directory.Exists(sourcePath)) {
+                    return;
+                }
+
+
+
+                var files = Directory.EnumerateFiles(sourcePath);
+                foreach (var f in files) {
+                    var v = new models.BuletinVot(f);
+                    v.Save();
+                    _votes.Add(v);
+                }
             }
 
-            _votes = new List<models.Vot>();
 
-            var files = Directory.EnumerateFiles(sourcePath);
-            foreach (var f in files) {
-                var v = new models.Vot(f);
-                v.Save();
-                _votes.Add(v);
-            }
             OnPropertyChanged("Votes");
         }
 
@@ -201,6 +189,7 @@ namespace BaroulBucuresti.Vot
 
             SelectedVot.Detect();
             Preview(SelectedVot.ShowBitmap);
+            NumaraVoturi();
         }
 
         private void Preview(System.Drawing.Bitmap bmp)
@@ -337,6 +326,7 @@ namespace BaroulBucuresti.Vot
                             Dispatcher.Invoke(() => {
                                 try {
                                     SelectedVot = v;
+                                    NumaraVoturi();
                                 }
                                 catch(Exception ex) {
 
@@ -355,5 +345,71 @@ namespace BaroulBucuresti.Vot
                 btnAutomat.Label = "Automat";
             }
         }
+
+        public List<ClasamentVM> Clasament { get; set; }
+
+        private void btnNumara_Click(object sender, RoutedEventArgs e)
+        {
+
+            NumaraVoturi();
+        }
+
+        private void NumaraVoturi()
+        {
+            Clasament = App.OptiuniVot.Select(o => new ClasamentVM {
+                NrCrt = o.NrCrt,
+                Candidat = o.Name,
+                Voturi = Votes
+                .Where(v => !v.Nullified)
+                .Select(v => {
+                    if (v.Result[o.NrCrt - 1]) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                }).Sum()
+            })
+            .OrderByDescending(o => o.Voturi)
+            .ThenBy(o => o.NrCrt)
+            .ToList();
+
+            OnPropertyChanged("Clasament");
+        }
+
+        private void mnuAnulat_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedVot != null) {
+                SelectedVot.Nullified = !SelectedVot.Nullified;
+            }
+        }
+
+        private void mnuProcesat_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedVot != null) {
+                SelectedVot.Processed = !SelectedVot.Processed;
+            }
+        }
+
+        private void mnuManual_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedVot != null) {
+                SelectedVot.Manual = !SelectedVot.Manual;
+            }
+        }
+
+        private void btnClear_Click(object sender, RoutedEventArgs e)
+        {
+            Votes.Clear();
+            SelectedVot = null;
+            OnPropertyChanged("Votes");
+            dgVotes.Items.Refresh();
+        }
+    }
+
+    public class ClasamentVM
+    {
+        public int NrCrt { get; set; }
+        public string Candidat { get; set; }
+        public int Voturi { get; set; }
     }
 }

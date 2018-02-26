@@ -38,6 +38,12 @@ namespace BaroulBucuresti.Vot
                 return "Workspace";
             }
         }
+
+        public static string KEY_MAXVOTES {
+            get {
+                return "Maxvotes";
+            }
+        }
     }
 
     /// <summary>
@@ -86,6 +92,10 @@ namespace BaroulBucuresti.Vot
 
             if (!Database.TableExists("Settings")) {
                 Database.ExecuteNonQuery("create table Settings (key text primary key, value text)");
+            }
+
+            if (String.IsNullOrEmpty(Database.GetSetting(Constants.KEY_MAXVOTES))) {
+                Database.SetSetting(Constants.KEY_MAXVOTES, "49");
             }
 
 

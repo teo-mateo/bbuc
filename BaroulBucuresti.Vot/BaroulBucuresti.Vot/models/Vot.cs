@@ -17,14 +17,37 @@ using Ghostscript.NET.Rasterizer;
 
 namespace BaroulBucuresti.Vot.models
 {
-    public class VotVM
+    public class VotVM : INotifyPropertyChanged
+    {
+        public int Index { get; set; }
+        public int NrCrt { get; set; }
+        public string Candidat { get; set; }
+        private bool _optiune; 
+        public bool Optiune {
+            get {
+                return _optiune;
+            }
+            set {
+                _optiune = value;
+                OnPropertyChanged("Optiune");
+            }
+        }
+
+        private void OnPropertyChanged(string name)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+        public event PropertyChangedEventHandler PropertyChanged;
+    }
+
+    public class BuletinVotVM
     {
         public string Filename {get;set;}
         public bool Processed { get; set; }
         public bool Nullified { get; set; }
         public bool Manual { get; set; }
 
-        public VotVM(string fn, bool p, bool n, bool m)
+        public BuletinVotVM(string fn, bool p, bool n, bool m)
         {
             Filename = fn;
             Processed = p;
@@ -33,8 +56,46 @@ namespace BaroulBucuresti.Vot.models
         }
     }
 
-    public class Vot : INotifyPropertyChanged
+    public class BuletinVot : INotifyPropertyChanged
     {
+
+        public List<VotVM> Votes { get; set; }
+        public int TotalVoturi {
+            get {
+                return Votes.Count(v => v.Optiune == true);
+            }
+        }
+
+        private void SetVotes(Dictionary<int, bool> votes)
+        {
+            Votes = new List<models.VotVM>();
+
+            var optiuni = Database.ExecuteQuery("select * from VoteOptions order by nrcrt asc").ToArray();
+            var optiuniList = new List<string>();
+            for (int i = 0; i < optiuni.Count(); i++) {
+                optiuniList.Add((string)optiuni[i].name);
+            }
+
+            for (int i = 0; i < optiuniList.Count; i++) {
+                bool optiune = false;
+                if (votes != null && votes.ContainsKey(i)) {
+                    optiune = votes[i];
+                }
+
+                Votes.Add(new VotVM() { Index = i, NrCrt = i + 1, Candidat = optiuniList[i], Optiune = optiune });
+                Votes.Last().PropertyChanged += (s, e) => {
+                    OnPropertyChanged("TotalVoturi");
+
+                    Result = Votes.OrderBy(v => v.NrCrt).Select(p => p.Optiune).ToArray();
+                };
+            }
+
+
+
+            OnPropertyChanged("Votes");
+            OnPropertyChanged("TotalVoturi");
+        }
+
         System.Drawing.Rectangle RectLeft { get; set; }
         System.Drawing.Rectangle RectRight { get; set; }
         List<Rectangle> LeftBoxes = new List<Rectangle>();
@@ -42,24 +103,41 @@ namespace BaroulBucuresti.Vot.models
 
         private void OnPropertyChanged(string name)
         {
-            var handler = PropertyChanged;
-            if (handler != null)
-                handler(this, new PropertyChangedEventArgs(name));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public Vot() { }
+        public BuletinVot()
+        {
+            SetVotes(null);
+        }
 
         
 
-        public Vot(string filename)
+        public BuletinVot(string filename)
         {
             _filename = filename;
             _result = new bool[App.OptiuniVot.Count];
+            SetVotes(null);
+        }
 
-            //LoadImageBitmap();
+        public BuletinVot(dynamic record)
+        {
+            _filename = record.filename;
+            Id = record.id;
+            _processed = (record.processed == 1);
+            _nullified = (record.nullified == 1);
+            _manual = (record.manual ==  1);
+            _result = new bool[App.OptiuniVot.Count];
 
-            
+            var ca = ((string)record.result).ToCharArray();
+            Dictionary<int, bool> votes = new Dictionary<int, bool>();
+            for (int i = 0; i < ca.Length; i++) {
+                _result[i] = (ca[i] == '1');
+                votes[i] = (ca[i] == '1');
+            }
+
+            SetVotes(votes);
         }
 
         private System.Drawing.Bitmap _bitmap;
@@ -140,9 +218,9 @@ namespace BaroulBucuresti.Vot.models
 
         public long Id { get; set; }
 
-        public VotVM VotVM {
+        public BuletinVotVM VotVM {
             get {
-                return new VotVM(ShortFilename, Processed, Nullified, Manual);
+                return new BuletinVotVM(ShortFilename, Processed, Nullified, Manual);
             }
         }
 
@@ -221,11 +299,11 @@ namespace BaroulBucuresti.Vot.models
                 var command = String.Format("insert into Votes (filename, processed, nullified, manual, result) values ('{0}', {1}, {2}, {3}, '{4}')", FileName, processed, nullified, manual, result.ToString());
                 Database.ExecuteNonQuery(command);
 
-                Id = (long)Database.ExecuteScalar("SELECT last_insert_rowid()");
+                Id = (long)Database.ExecuteScalar("SELECT id from Votes order by id desc limit 1");
 
             } else {
                 //update
-                var command = String.Format("update Votes set filename='{0}', processed={1} nullified={2}, manual={3}, result='{4}' where id={5}", FileName, processed, nullified, manual, result.ToString(), Id);
+                var command = String.Format("update Votes set filename='{0}', processed={1}, nullified={2}, manual={3}, result='{4}' where id={5}", FileName, processed, nullified, manual, result.ToString(), Id);
                 Database.ExecuteNonQuery(command);
             }
         }
@@ -263,6 +341,12 @@ namespace BaroulBucuresti.Vot.models
 
         internal bool DetectionStep(Step step)
         {
+
+
+            if (_wBitmap == null) {
+                _wBitmap = GetWorkingBitmap();
+            }
+
             switch (step.Type) {
                 case StepType.Sharpen:
                     new Sharpen().ApplyInPlace(_wBitmap);
@@ -292,15 +376,14 @@ namespace BaroulBucuresti.Vot.models
                 case StepType.VoteCounter:
                     return VoteCounter();
             }
-
-
             return true;
-            OnPropertyChanged("ShowBitmap");
         }
 
         private bool VoteCounter()
         {
             var rowsCount = App.OptiuniVot.Count / 2 + App.OptiuniVot.Count % 2;
+            LeftBoxes.Clear();
+            RightBoxes.Clear();
 
             Rectangle l = new Rectangle(), r = new Rectangle();
 
@@ -321,26 +404,34 @@ namespace BaroulBucuresti.Vot.models
                 RightBoxes.Add(r);
             }
 
+            Dictionary<int, bool> votes = new Dictionary<int, bool>();
+
 
             using (var g = Graphics.FromImage(_bitmap))
             using (Pen pen = new Pen(Color.Yellow, 2)) {
 
-                foreach (var lb in LeftBoxes) {
-                    PaintBox(g, pen, lb);
-                }
+                int index = 0;
 
-                foreach (var rb in RightBoxes) {
-                    PaintBox(g, pen, rb);
+                for (var i = 0; i < LeftBoxes.Count; i++) {
+                    var vote = PaintBox(g, pen, LeftBoxes[i]);
+                    votes[index++] = vote;
+                }
+                for (var i = 0; i < RightBoxes.Count; i++) {
+                    var vote = PaintBox(g, pen, RightBoxes[i]);
+                    votes[index++] = vote;
                 }
             }
 
-            
+            SetVotes(votes);
+            Result = Votes.OrderBy(v => v.NrCrt).Select(p => p.Optiune).ToArray();
 
             return true;
         }
 
-        private void PaintBox(Graphics g, Pen pen, Rectangle r)
+        private bool PaintBox(Graphics g, Pen pen, Rectangle r)
         {
+            bool vote = false;
+
             int red = 0, green = 0, blue = 0, alpha = 0;
 
             for (int i = 0; i < r.Width; i++) {
@@ -364,6 +455,7 @@ namespace BaroulBucuresti.Vot.models
             System.Diagnostics.Debug.WriteLine("{0}  {1}  {2}  {3}", alpha, red, green, blue);
 
             if ((red+green+blue) / 3 > 50) {
+                vote = true;
                 color = Color.White;
             }
 
@@ -371,6 +463,8 @@ namespace BaroulBucuresti.Vot.models
             System.Drawing.Brush b = new System.Drawing.SolidBrush(color);
             g.FillRectangle(b, Rectangle.FromLTRB(r.Left+50, r.Top, r.Right+50, r.Bottom));
             b.Dispose();
+
+            return vote;
         }
 
         private bool BlobCounter()
@@ -429,8 +523,8 @@ namespace BaroulBucuresti.Vot.models
             }
             else {
 
-                RectLeft = blobs.First().Rectangle;
-                RectRight = blobs.Last().Rectangle;
+                RectLeft = blobs.OrderBy(b => b.Rectangle.Left).First().Rectangle;
+                RectRight = blobs.OrderBy(b => b.Rectangle.Left).Last().Rectangle;
                 return true;
             }
         }
@@ -531,6 +625,8 @@ namespace BaroulBucuresti.Vot.models
 
         public void Detect()
         {
+            LoadImageBitmap();
+
             if (_wBitmap == null) {
                 _wBitmap = GetWorkingBitmap();
             }

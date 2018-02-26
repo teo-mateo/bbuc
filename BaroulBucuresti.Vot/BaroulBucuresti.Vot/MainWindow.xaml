@@ -5,23 +5,25 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BaroulBucuresti.Vot"
         mc:Ignorable="d" WindowState="Maximized" WindowStartupLocation="CenterScreen"
-        Title="MainWindow" Height="350" Width="800">
+        Title="Baroul Bucuresti" Height="800" Width="1200">
 
     <DockPanel>
         <Ribbon DockPanel.Dock="Top" Margin="0,-22,0,0">
             <Ribbon.ApplicationMenu>
                 <RibbonApplicationMenu KeyTip="F">
                     <RibbonApplicationMenuItem Header="Opțiuni vot" ImageSource="images/options-128.png" Name="mnuOptiuniVot" Click="mnuOptiuniVot_Click" />
-                    <RibbonApplicationMenuItem Header="Setări program" ImageSource="images/cog-48.png" Name="mnuSetariAplicatie" Click="mnuSetariAplicatie_Click" />
                     <RibbonApplicationMenuItem Header="Ieșire" ImageSource="images/exit-128.png" Name="mnuExit" Click="mnuExit_Click"/>
                 </RibbonApplicationMenu>
             </Ribbon.ApplicationMenu>
             <RibbonTab x:Name="rbnTab1" Header="">
                 <RibbonGroup x:Name="rbnGr1" Header="General">
                     <RibbonButton x:Name="btnSursaVoturi" Label="Alege sursă voturi" LargeImageSource="images/folder-32.png" Click="btnSursaVoturi_Click"/>
-                    <RibbonButton x:Name="btnDetect" Label="Vot curent" LargeImageSource="images/folder-32.png" Click="btnDetect_Click"></RibbonButton>
-                    <RibbonButton x:Name="btnManual" Label="Manual" LargeImageSource="images/folder-32.png" Click="btnManual_Click"></RibbonButton>
-                    <RibbonButton x:Name="btnAutomat" Label="Automat" LargeImageSource="images/folder-32.png" Click="btnAutomat_Click"></RibbonButton>
+                    <RibbonButton x:Name="btnDetect" Label="Numără buletin" LargeImageSource="images/count2-48.png" Click="btnDetect_Click"></RibbonButton>
+                    <RibbonButton x:Name="btnManual" Label="Manual" LargeImageSource="images/hand-200.png" Click="btnManual_Click"></RibbonButton>
+                    <RibbonButton x:Name="btnAutomat" Label="Automat" LargeImageSource="images/play-256.png" Click="btnAutomat_Click"></RibbonButton>
+                    <!--
+                    <RibbonButton x:Name="btnClear" Label="Clear" Click="btnClear_Click"></RibbonButton>
+                    
                     <RibbonButton x:Name="btnSharpen" Label="Sharpen" Click="btnSharpen_Click"></RibbonButton>
                     <RibbonButton x:Name="btnMedian" Label="Median" Click="btnMedian_Click"></RibbonButton>
                     <RibbonButton x:Name="btnSobel" Label="Sobel edge" Click="btnSobel_Click"></RibbonButton>
@@ -30,6 +32,7 @@
                     <RibbonButton x:Name="btnHoughLines" Label="Hough lines" Click="btnHoughLines_Click"></RibbonButton>
                     <RibbonButton x:Name="btnBlobCounter" Label="Blob counter" Click="btnBlobCounter_Click"></RibbonButton>
                     <RibbonButton x:Name="btnSave" Label="Save" Click="btnSave_Click"></RibbonButton>
+                    -->
                 </RibbonGroup>
             </RibbonTab>
         </Ribbon>
@@ -40,7 +43,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5 5 0 0">
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5 5 0 0" Visibility="Collapsed">
                 <TextBlock VerticalAlignment="Center">Sursa fisiere:</TextBlock>
                 <TextBox Width="600" Margin="2" Text="{Binding VoteSource, Mode=OneWay}" IsReadOnly="True" IsEnabled="False"></TextBox>
             </StackPanel>
@@ -49,13 +52,20 @@
             <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="5 0 0 0">
                 <GroupBox Header="Scan" Width="350">
 
-                    <DataGrid ItemsSource="{Binding Votes}" CanUserAddRows="False" IsReadOnly="True" AutoGenerateColumns="False" SelectedItem="{Binding SelectedVot}">
+                    <DataGrid ItemsSource="{Binding Votes}" CanUserAddRows="False" IsReadOnly="True" AutoGenerateColumns="False" SelectedItem="{Binding SelectedVot}" Name="dgVotes">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Fisier" Binding="{Binding VotVM.Filename}" Width="*"/>
                             <DataGridCheckBoxColumn Header="Procesat" Binding="{Binding VotVM.Processed}" />
                             <DataGridCheckBoxColumn Header="Anulat" Binding="{Binding VotVM.Nullified}" />
                             <DataGridCheckBoxColumn Header="Manual" Binding="{Binding VotVM.Manual}" />
                         </DataGrid.Columns>
+                        <DataGrid.ContextMenu>
+                            <RibbonContextMenu>
+                                <MenuItem Name="mnuProcesat" Header="Ne/Procesat" Click="mnuProcesat_Click"></MenuItem>
+                                <MenuItem Name="mnuAnulat" Header="Ne/Anulat" Click="mnuAnulat_Click"></MenuItem>
+                                <MenuItem Name="mnuManual" Header="Manual" Click="mnuManual_Click"></MenuItem>
+                            </RibbonContextMenu>
+                        </DataGrid.ContextMenu>
                     </DataGrid>
                     
                     <!--<ListBox ItemsSource="{Binding Votes}">
@@ -69,9 +79,54 @@
                     </ListBox>-->
                 </GroupBox>
                 <local:ZoomBorder x:Name="border" ClipToBounds="True" Background="Gray">
-                    <Image Name="imgPreview" Width="800"/>
+                    <Image Name="imgPreview" Width="650"/>
                 </local:ZoomBorder>
-                
+                <GroupBox Margin="2" Padding="2">
+                    <GroupBox.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock>Voturi buletin curent</TextBlock>
+                            <TextBlock Text="{Binding Path=SelectedVot.TotalVoturi, UpdateSourceTrigger=LostFocus, StringFormat={} ({0}) }" Margin="2 0 0 0" />
+                            <TextBlock Text="{Binding MaxVotes, StringFormat={} / {0} }" Margin="2 0 0 0" />
+                        </StackPanel>
+                    </GroupBox.Header>
+                    <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding SelectedVot.Votes}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <CheckBox IsChecked="{Binding Path=Optiune}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Path=NrCrt, StringFormat={}{0}. }" Margin="2 0 0 0" />
+                                                <TextBlock Text="{Binding Path=Candidat}" Margin="2 0 0 0" />
+                                            </StackPanel>
+                                        </CheckBox>
+                                    </StackPanel>
+                                </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    </ScrollViewer>
+                </GroupBox>
+                <GroupBox Margin="2" Padding="2">
+                    <GroupBox.Header>
+                        <StackPanel Orientation="Horizontal" >
+                            <TextBlock FontWeight="Bold" VerticalAlignment="Center" Margin="2">General</TextBlock>
+                            <Button Margin="2" x:Name="btnNumara" VerticalAlignment="Center" Click="btnNumara_Click">Numără</Button>
+                        </StackPanel>
+                    </GroupBox.Header>
+                    <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding Clasament}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Path=Voturi, StringFormat={}{0}. }" Margin="2 0 0 0" />
+                                        <TextBlock Text="{Binding Path=Candidat}" Margin="2 0 0 0" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </GroupBox>
+
             </StackPanel>
 
         </Grid>
