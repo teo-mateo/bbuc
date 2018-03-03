@@ -63,7 +63,13 @@ namespace BaroulBucuresti.Vot
                         _selectedVot.LoadImageBitmap();
                     }
 
-                    Preview(_selectedVot.ShowBitmap);
+                    Preview();
+
+                    foreach (var v in Votes) {
+                        if (v != SelectedVot) {
+                            v.Free();
+                        }
+                    }
                 }
             }
         }
@@ -197,7 +203,7 @@ namespace BaroulBucuresti.Vot
             Console.WriteLine("Took {0} ms to detect.", sw.ElapsedMilliseconds);
 
             sw.Restart();
-            Preview(SelectedVot.ShowBitmap);
+            Preview();
             sw.Stop();
             Console.WriteLine("Took {0} ms to preview.", sw.ElapsedMilliseconds);
 
@@ -207,25 +213,30 @@ namespace BaroulBucuresti.Vot
             Console.WriteLine("Took {0} ms to count all votes", sw.ElapsedMilliseconds);
         }
 
-        private void Preview(System.Drawing.Bitmap bmp)
+        private void Preview()
         {
-
             if (SelectedVot == null) {
                 return;
             }
 
-            if (SelectedVot.ShowBitmap == null) {
-                SelectedVot.LoadImageBitmap();
-            }
 
-            var ms = new MemoryStream();
-            ((System.Drawing.Bitmap)SelectedVot.ShowBitmap).Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-            BitmapImage image = new BitmapImage();
-            image.BeginInit();
-            ms.Seek(0, SeekOrigin.Begin);
-            image.StreamSource = ms;
-            image.EndInit();
-            imgPreview.Source = image;
+            if (!String.IsNullOrEmpty(SelectedVot.ProcessedFN)) {
+                imgPreview.Source = new BitmapImage(new Uri(SelectedVot.ProcessedFN));
+            } else {
+
+                if (SelectedVot.ShowBitmap == null) {
+                    SelectedVot.LoadImageBitmap();
+                }
+
+                var ms = new MemoryStream();
+                ((System.Drawing.Bitmap)SelectedVot.ShowBitmap).Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+                BitmapImage image = new BitmapImage();
+                image.BeginInit();
+                ms.Seek(0, SeekOrigin.Begin);
+                image.StreamSource = ms;
+                image.EndInit();
+                imgPreview.Source = image;
+            }
         }
 
         private void btnSharpen_Click(object sender, RoutedEventArgs e)
@@ -235,7 +246,7 @@ namespace BaroulBucuresti.Vot
             }
 
             SelectedVot.DetectionStep(new Detection.Step() { Type = Detection.StepType.Sharpen });
-            Preview(SelectedVot.ShowBitmap);
+            Preview();
         }
 
         private void btnMedian_Click(object sender, RoutedEventArgs e)
@@ -245,7 +256,7 @@ namespace BaroulBucuresti.Vot
             }
 
             SelectedVot.DetectionStep(new Detection.Step() { Type = Detection.StepType.Median });
-            Preview(SelectedVot.ShowBitmap);
+            Preview();
         }
 
         private void btnBlobCounter_Click(object sender, RoutedEventArgs e)
@@ -255,7 +266,7 @@ namespace BaroulBucuresti.Vot
             }
 
             SelectedVot.DetectionStep(new Detection.Step() { Type = Detection.StepType.BlobCounter });
-            Preview(SelectedVot.ShowBitmap);
+            Preview();
         }
 
         private void btnSobel_Click(object sender, RoutedEventArgs e)
@@ -265,7 +276,7 @@ namespace BaroulBucuresti.Vot
             }
 
             SelectedVot.DetectionStep(new Detection.Step() { Type = Detection.StepType.SobelEdgeDetection });
-            Preview(SelectedVot.ShowBitmap);
+            Preview();
         }
 
         private void btnCanny_Click(object sender, RoutedEventArgs e)
@@ -275,7 +286,7 @@ namespace BaroulBucuresti.Vot
             }
 
             SelectedVot.DetectionStep(new Detection.Step() { Type = Detection.StepType.CannyFilter });
-            Preview(SelectedVot.ShowBitmap);
+            Preview();
         }
 
         private void btnDifference_Click(object sender, RoutedEventArgs e)
@@ -285,7 +296,7 @@ namespace BaroulBucuresti.Vot
             }
 
             SelectedVot.DetectionStep(new Detection.Step() { Type = Detection.StepType.DifferenceEdgeDetection });
-            Preview(SelectedVot.ShowBitmap);
+            Preview();
         }
 
         private void btnHoughLines_Click(object sender, RoutedEventArgs e)
@@ -295,7 +306,7 @@ namespace BaroulBucuresti.Vot
             }
 
             SelectedVot.DetectionStep(new Detection.Step() { Type = Detection.StepType.HoughLines });
-            Preview(SelectedVot.ShowBitmap);
+            Preview();
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
@@ -313,7 +324,7 @@ namespace BaroulBucuresti.Vot
             SelectedVot.Manual = !SelectedVot.Manual;
             SelectedVot.LoadImageBitmap();
 
-            Preview(SelectedVot.ShowBitmap);
+            Preview();
         }
 
         bool _cancel;

@@ -58,6 +58,12 @@ namespace BaroulBucuresti.Vot.models
 
     public class BuletinVot : INotifyPropertyChanged
     {
+        private string _processedFN;
+        public string ProcessedFN {
+            get {
+                return _processedFN;
+            }
+        }
 
         public List<VotVM> Votes { get; set; }
         public int TotalVoturi {
@@ -140,21 +146,27 @@ namespace BaroulBucuresti.Vot.models
         }
 
         private System.Drawing.Bitmap _bitmap;
-        private System.Drawing.Bitmap _wBitmap;
+
+        public void Free()
+        {
+            if (_bitmap != null) {
+                _bitmap.Dispose();
+                _bitmap = null;
+            }
+        }
+
 
         public void LoadImageBitmap()
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
             try {
                 if (_bitmap != null) {
                     _bitmap.Dispose();
                     _bitmap = null;
                 }
-
-                if (_wBitmap != null) {
-                    _wBitmap.Dispose();
-                    _wBitmap = null;
-                }
-
+                
                 if (!System.IO.File.Exists(_filename)) {
                     return;
                 }
@@ -171,22 +183,17 @@ namespace BaroulBucuresti.Vot.models
 
                     for (var pageNumber = 1; pageNumber <= rasterizer.PageCount; pageNumber++) {
                         var img = rasterizer.GetPage(desired_x_dpi, desired_y_dpi, pageNumber);
-                        _bitmap = (System.Drawing.Bitmap)img;
+                        _bitmap = Accord.Imaging.Image.Clone((System.Drawing.Bitmap)img, PixelFormat.Format24bppRgb);
+                        _bitmap = Grayscale.CommonAlgorithms.RMY.Apply(_bitmap);
                     }
                 }
-
-
             }
-            catch(Exception ex) {
+            catch(Exception) {
                 Manual = true;
+            } finally {
+                sw.Stop();
+                Console.WriteLine("Took {0} ms to load image bitmap", sw.ElapsedMilliseconds);
             }
-        }
-
-        private Bitmap GetWorkingBitmap()
-        {
-            Bitmap temp = Accord.Imaging.Image.Clone(_bitmap, PixelFormat.Format24bppRgb);
-            // get grayscale image
-            return Grayscale.CommonAlgorithms.RMY.Apply(temp);
         }
 
         public System.Drawing.Bitmap ShowBitmap {
@@ -195,23 +202,13 @@ namespace BaroulBucuresti.Vot.models
             }
         }
 
-
-        public System.Drawing.Bitmap DisplayBitmap {
-            get {
-                return _bitmap;
-            }
-        }
-
-
         public void ApplyCannyFilter(byte low, byte high, double sigma)
         {
 
             var f = new SobelEdgeDetector();
 
-            _wBitmap = GetWorkingBitmap();
-
             var filter = new CannyEdgeDetector(low, high, sigma);
-            _wBitmap = filter.Apply(_wBitmap);
+            _bitmap = filter.Apply(_bitmap);
             OnPropertyChanged("ShowBitmap");
         }
 
@@ -340,34 +337,29 @@ namespace BaroulBucuresti.Vot.models
 
         internal bool DetectionStep(Step step)
         {
-
-
-            if (_wBitmap == null) {
-                _wBitmap = GetWorkingBitmap();
-            }
-
             switch (step.Type) {
                 case StepType.Sharpen:
-                    new Sharpen().ApplyInPlace(_wBitmap);
-                    _bitmap = Accord.Imaging.Image.Clone(_wBitmap, PixelFormat.Format24bppRgb);
+                    new Sharpen().ApplyInPlace(_bitmap);
+                    //_bitmap = Accord.Imaging.Image.Clone(_wBitmap, PixelFormat.Format24bppRgb);
                     return true;
                 case StepType.CannyFilter:
-                    new CannyEdgeDetector(0, 30, 0.2).ApplyInPlace(_wBitmap);
-                    _bitmap = Accord.Imaging.Image.Clone(_wBitmap, PixelFormat.Format24bppRgb);
+                    new CannyEdgeDetector(0, 30, 0.2).ApplyInPlace(_bitmap);
+                    //_bitmap = Accord.Imaging.Image.Clone(_wBitmap, PixelFormat.Format24bppRgb);
                     return true;
                 case StepType.SobelEdgeDetection:
-                    new SobelEdgeDetector().ApplyInPlace(_wBitmap);
-                    _bitmap = Accord.Imaging.Image.Clone(_wBitmap, PixelFormat.Format24bppRgb);
+                    new SobelEdgeDetector().ApplyInPlace(_bitmap);
+                    //_bitmap = Accord.Imaging.Image.Clone(_wBitmap, PixelFormat.Format24bppRgb);
                     return true;
                 case StepType.DifferenceEdgeDetection:
-                    new DifferenceEdgeDetector().ApplyInPlace(_wBitmap);
-                    _bitmap = Accord.Imaging.Image.Clone(_wBitmap, PixelFormat.Format24bppRgb);
+                    new DifferenceEdgeDetector().ApplyInPlace(_bitmap);
+                    //_bitmap = Accord.Imaging.Image.Clone(_wBitmap, PixelFormat.Format24bppRgb);
                     return true;
                 case StepType.Median:
-                    new Median().ApplyInPlace(_wBitmap);
-                    _bitmap = Accord.Imaging.Image.Clone(_wBitmap, PixelFormat.Format24bppRgb);
+                    new Median().ApplyInPlace(_bitmap);
+                    //_bitmap = Accord.Imaging.Image.Clone(_wBitmap, PixelFormat.Format24bppRgb);
                     return true;
                 case StepType.BlobCounter:
+                    _bitmap = Accord.Imaging.Image.Clone(_bitmap, PixelFormat.Format24bppRgb);
                     return BlobCounter();
                 case StepType.HoughLines:
                     HoughLines();
@@ -482,9 +474,8 @@ namespace BaroulBucuresti.Vot.models
         private bool BlobCounter()
         {
 
-            var bitmap = Accord.Imaging.Image.Clone(_wBitmap, PixelFormat.Format24bppRgb);
             // lock image
-            BitmapData bitmapData = bitmap.LockBits(ImageLockMode.ReadWrite);
+            BitmapData bitmapData = _bitmap.LockBits(ImageLockMode.ReadWrite);
 
             // step 1 - turn background to black
             ColorFiltering colorFilter = new ColorFiltering();
@@ -504,7 +495,7 @@ namespace BaroulBucuresti.Vot.models
 
             blobCounter.ProcessImage(bitmapData);
             Blob[] blobs = blobCounter.GetObjectsInformation();
-            bitmap.UnlockBits(bitmapData);
+            _bitmap.UnlockBits(bitmapData);
 
             // step 3 - check objects' type and highlight
             SimpleShapeChecker shapeChecker = new SimpleShapeChecker();
@@ -543,7 +534,7 @@ namespace BaroulBucuresti.Vot.models
 
         private void HoughLines()
         {
-            var image = Accord.Imaging.Image.Clone(_wBitmap, PixelFormat.Format24bppRgb);
+            var image = Accord.Imaging.Image.Clone(_bitmap, PixelFormat.Format24bppRgb);
             int imageWidth = image.Width;
             int imageHeight = image.Height;
 
@@ -637,10 +628,10 @@ namespace BaroulBucuresti.Vot.models
 
         public void Detect()
         {
-            LoadImageBitmap();
 
-            if (_wBitmap == null) {
-                _wBitmap = GetWorkingBitmap();
+            
+            if (_bitmap == null) {
+                LoadImageBitmap();
             }
 
             List<Step> steps = new List<Step>();
@@ -673,9 +664,14 @@ namespace BaroulBucuresti.Vot.models
             OnPropertyChanged("Manual");
             OnPropertyChanged("Nullified");
             OnPropertyChanged("VotVM");
+
+            sw.Restart();
             Save();
 
-            _wBitmap.Dispose();
+            sw.Stop();
+            Console.WriteLine("Took {0} ms to save.", sw.ElapsedMilliseconds);
+
+            _bitmap.Save(Guid.NewGuid().ToString() + ".bmp");
         }
     }
 }
