@@ -70,10 +70,9 @@ namespace BaroulBucuresti.Vot.models
         {
             Votes = new List<models.VotVM>();
 
-            var optiuni = Database.ExecuteQuery("select * from VoteOptions order by nrcrt asc").ToArray();
             var optiuniList = new List<string>();
-            for (int i = 0; i < optiuni.Count(); i++) {
-                optiuniList.Add((string)optiuni[i].name);
+            for (int i = 0; i < App.OptiuniVot.Count; i++) {
+                optiuniList.Add((string)App.OptiuniVot[i].Name);
             }
 
             for (int i = 0; i < optiuniList.Count; i++) {
@@ -367,19 +366,26 @@ namespace BaroulBucuresti.Vot.models
                 case StepType.Median:
                     new Median().ApplyInPlace(_wBitmap);
                     _bitmap = Accord.Imaging.Image.Clone(_wBitmap, PixelFormat.Format24bppRgb);
-                    break;
+                    return true;
                 case StepType.BlobCounter:
                     return BlobCounter();
                 case StepType.HoughLines:
                     HoughLines();
                     break;
                 case StepType.VoteCounter:
-                    return VoteCounter();
+                    var result = new bool[App.OptiuniVot.Count];
+                    var countok = VoteCounter(out result);
+
+                    _processed = countok;
+                    _manual = !countok;
+                    _result = result;
+
+                    return countok;
             }
             return true;
         }
 
-        private bool VoteCounter()
+        private bool VoteCounter(out bool[] result)
         {
             var rowsCount = App.OptiuniVot.Count / 2 + App.OptiuniVot.Count % 2;
             LeftBoxes.Clear();
@@ -412,6 +418,9 @@ namespace BaroulBucuresti.Vot.models
 
                 int index = 0;
 
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+
                 for (var i = 0; i < LeftBoxes.Count; i++) {
                     var vote = PaintBox(g, pen, LeftBoxes[i]);
                     votes[index++] = vote;
@@ -420,10 +429,13 @@ namespace BaroulBucuresti.Vot.models
                     var vote = PaintBox(g, pen, RightBoxes[i]);
                     votes[index++] = vote;
                 }
+
+                sw.Stop();
+                Console.WriteLine(String.Format("Took {0} ms to compute votes.", sw.ElapsedMilliseconds));
             }
 
             SetVotes(votes);
-            Result = Votes.OrderBy(v => v.NrCrt).Select(p => p.Optiune).ToArray();
+            result = Votes.OrderBy(v => v.NrCrt).Select(p => p.Optiune).ToArray();
 
             return true;
         }
@@ -452,7 +464,7 @@ namespace BaroulBucuresti.Vot.models
             alpha = avg(alpha);
 
             var color = Color.FromArgb(alpha, red, green, blue);
-            System.Diagnostics.Debug.WriteLine("{0}  {1}  {2}  {3}", alpha, red, green, blue);
+            //System.Diagnostics.Debug.WriteLine("{0}  {1}  {2}  {3}", alpha, red, green, blue);
 
             if ((red+green+blue) / 3 > 50) {
                 vote = true;
@@ -502,7 +514,7 @@ namespace BaroulBucuresti.Vot.models
 
                 for (int i = 0; i < blobs.Length; i++) {
 
-                    Debug.WriteLine(String.Format("Blob {0}: W: {1}   H:{2}   ", i, blobs[i].Rectangle.Width, blobs[i].Rectangle.Height));
+                    //Debug.WriteLine(String.Format("Blob {0}: W: {1}   H:{2}   ", i, blobs[i].Rectangle.Width, blobs[i].Rectangle.Height));
 
                     List<IntPoint> edgePoints = blobCounter.GetBlobsEdgePoints(blobs[i]);
                     List<IntPoint> corners;
@@ -638,15 +650,30 @@ namespace BaroulBucuresti.Vot.models
             steps.Add(new Step() { Type = StepType.BlobCounter });
             steps.Add(new Step() { Type = StepType.VoteCounter });
             bool ok = true;
+
+            Stopwatch sw = new Stopwatch();
+            
+
             foreach(var s in steps) {
+
+                sw.Restart();
+
                 ok = DetectionStep(s);
+
+                sw.Stop();
+                Console.WriteLine("Took {0} ms to do detect step {1}", sw.ElapsedMilliseconds, s.Type);
+
                 if (!ok) {
                     break;
                 }
             }
 
-            Processed = ok;
-            Manual = !ok;
+
+            OnPropertyChanged("Processed");
+            OnPropertyChanged("Manual");
+            OnPropertyChanged("Nullified");
+            OnPropertyChanged("VotVM");
+            Save();
 
             _wBitmap.Dispose();
         }

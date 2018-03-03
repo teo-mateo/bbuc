@@ -3,6 +3,7 @@ using Ghostscript.NET.Rasterizer;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -136,9 +137,10 @@ namespace BaroulBucuresti.Vot
                     OnPropertyChanged("Votes");
                     SelectedVot = null;
                     OnPropertyChanged("SelectedVot");
-                    Clasament.Clear();
-                    OnPropertyChanged("Clasament");
-
+                    if (Clasament != null) {
+                        Clasament.Clear();
+                        OnPropertyChanged("Clasament");
+                    }
                     Database.SetSetting(Constants.KEY_VOTE_SOURCE, fbd.SelectedPath);
 
 
@@ -187,9 +189,22 @@ namespace BaroulBucuresti.Vot
                 return;
             }
 
+            Stopwatch sw = new Stopwatch();
+
+            sw.Restart();
             SelectedVot.Detect();
+            sw.Stop();
+            Console.WriteLine("Took {0} ms to detect.", sw.ElapsedMilliseconds);
+
+            sw.Restart();
             Preview(SelectedVot.ShowBitmap);
+            sw.Stop();
+            Console.WriteLine("Took {0} ms to preview.", sw.ElapsedMilliseconds);
+
+            sw.Restart();
             NumaraVoturi();
+            sw.Stop();
+            Console.WriteLine("Took {0} ms to count all votes", sw.ElapsedMilliseconds);
         }
 
         private void Preview(System.Drawing.Bitmap bmp)

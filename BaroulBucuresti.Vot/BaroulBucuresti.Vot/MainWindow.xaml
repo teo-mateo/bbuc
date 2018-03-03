@@ -21,9 +21,15 @@
                     <RibbonButton x:Name="btnDetect" Label="Numără buletin" LargeImageSource="images/count2-48.png" Click="btnDetect_Click"></RibbonButton>
                     <RibbonButton x:Name="btnManual" Label="Manual" LargeImageSource="images/hand-200.png" Click="btnManual_Click"></RibbonButton>
                     <RibbonButton x:Name="btnAutomat" Label="Automat" LargeImageSource="images/play-256.png" Click="btnAutomat_Click"></RibbonButton>
-                    <!--
+
+
+
+
+
+
+
+
                     <RibbonButton x:Name="btnClear" Label="Clear" Click="btnClear_Click"></RibbonButton>
-                    
                     <RibbonButton x:Name="btnSharpen" Label="Sharpen" Click="btnSharpen_Click"></RibbonButton>
                     <RibbonButton x:Name="btnMedian" Label="Median" Click="btnMedian_Click"></RibbonButton>
                     <RibbonButton x:Name="btnSobel" Label="Sobel edge" Click="btnSobel_Click"></RibbonButton>
@@ -32,7 +38,7 @@
                     <RibbonButton x:Name="btnHoughLines" Label="Hough lines" Click="btnHoughLines_Click"></RibbonButton>
                     <RibbonButton x:Name="btnBlobCounter" Label="Blob counter" Click="btnBlobCounter_Click"></RibbonButton>
                     <RibbonButton x:Name="btnSave" Label="Save" Click="btnSave_Click"></RibbonButton>
-                    -->
+                    
                 </RibbonGroup>
             </RibbonTab>
         </Ribbon>

@@ -40,7 +40,9 @@ namespace BaroulBucuresti.Vot
 
         public static void ExecuteNonQuery(string command, SQLiteConnection cn=null)
         {
-            Debug.WriteLine("(ExecuteNonQuery) " + command);
+            var sw = new Stopwatch();
+            sw.Start();
+
             bool dispose = false;
 
             if (cn == null) {
@@ -58,13 +60,17 @@ namespace BaroulBucuresti.Vot
                         cn.Close();
                         cn.Dispose();
                     } catch { }
+
+                    sw.Stop();
+                    Debug.WriteLine("(ExecuteNonQuery {0}) {1}", sw.ElapsedMilliseconds, command);
                 }
             }
         }
 
         public static IEnumerable<dynamic> ExecuteQuery(string command, SQLiteConnection cn = null)
         {
-            Debug.WriteLine("(ExecuteQuery) " + command);
+            var sw = new Stopwatch();
+            sw.Start();
 
             bool dispose = false;
             if (cn == null) {
@@ -102,6 +108,9 @@ namespace BaroulBucuresti.Vot
                         cn.Dispose();
                     } catch { }
                 }
+
+                sw.Stop();
+                Debug.WriteLine("(ExecuteQuery {0}) {1}", sw.ElapsedMilliseconds, command);
             }
         }
 
